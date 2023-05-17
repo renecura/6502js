@@ -1,34 +1,68 @@
 <!doctype html>
 <html>
-  <head>
-    <link href="style.css" rel="stylesheet" type="text/css" />
-    <title>6502 assembler/simulator</title>
-  </head>
-  <body>
 
-    <div class="widget">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  <link href="editor.css" rel="stylesheet" type="text/css" />
+  <title>6502 assembler/simulator</title>
+</head>
+
+<body style="font-family:Verdana;color:#000000;">
+
+  <div class="widget">
+    <div style="background-color:#e5e5e5;padding:2px;text-align:center;">
       <div class="buttons">
         <input type="button" value="Assemble" class="assembleButton" />
         <input type="button" value="Run" class="runButton" />
         <input type="button" value="Reset" class="resetButton" />
-        <input type="button" value="Hexdump" class="hexdumpButton" />
-        <input type="button" value="Disassemble" class="disassembleButton" />
-        <input type="button" value="Notes" class="notesButton" />
       </div>
+      <div class="minidebugger"></div>
+    </div>
 
-      <textarea class="code"></textarea>
-
-      <canvas class="screen" width="160" height="160"></canvas>
-
-      <div class="debugger">
-        <input type="checkbox" class="debug" name="debug" />
-        <label for="debug">Debugger</label>
-        <div class="minidebugger"></div>
-        <div class="buttons">
-          <input type="button" value="Step" class="stepButton" />
-          <input type="button" value="Jump to ..." class="gotoButton" />
+    <div style="overflow:auto">
+      <div class="menu">
+        <div class="editor">
+          <!-- <div class="line-numbers">
+            <span></span>
+          </div> -->
+        <textarea class="code code-editor" wrap="off" rows="14">
+  lda #$05
+  ldx #$00
+loop:
+  sta $0200,x
+  inx
+  bne loop
+  brk
+        </textarea>
         </div>
       </div>
+
+      <div class="main">
+        <canvas class="screen" width="320px" height="320px"></canvas>
+      </div>
+
+      <div class="right">
+        <div class="debugger">
+          <input type="checkbox" class="debug" name="debug" />
+          <label for="debug">Debugger</label>
+          <div class="buttons">
+            <input type="button" value="Step" class="stepButton" />
+            <input type="button" value="Jump to ..." class="gotoButton" />
+          </div>
+        </div>
+        <div class="messages">
+          <pre><code></code></pre>
+        </div>
+        <div class="buttons">
+          <input type="button" value="Disassemble" class="disassembleButton" />
+          <input type="button" value="Hexdump" class="hexdumpButton" />
+          <input type="button" value="?" class="notesButton" />
+        </div>
+      </div>
+    </div>
+
+    <div style="background-color:#e5e5e5;text-align:left;padding:10px;margin-top:7px;">
 
       <div class="monitorControls">
         <label for="monitoring">Monitor</label>
@@ -36,40 +70,45 @@
 
         <label for="start">Start: $</label>
         <input type="text" value="0" class="start" name="start" />
-        <label for="length">Length: $</label>
+        <label for="length">End: $</label>
         <input type="text" value="ff" class="length" name="length" />
+        <input type="file" class="memoryfile" />
       </div>
-      <div class="monitor"><pre><code></code></pre></div>
-      <div class="messages"><pre><code></code></pre></div>
-
-      <div class="notes" style="display: none">Notes:
-
-Memory location $fe contains a new random byte on every instruction.
-Memory location $ff contains the ascii code of the last key pressed.
-
-Memory locations $200 to $5ff map to the screen pixels. Different values will
-draw different colour pixels. The colours are:
-
-$0: Black
-$1: White
-$2: Red
-$3: Cyan
-$4: Purple
-$5: Green
-$6: Blue
-$7: Yellow
-$8: Orange
-$9: Brown
-$a: Light red
-$b: Dark grey
-$c: Grey
-$d: Light green
-$e: Light blue
-$f: Light grey
+      <div class="monitor">
+        <pre><code></code></pre>
+      </div>
     </div>
 
-    <script src="es5-shim.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script src="assembler.js"></script>
-  </body>
+    <div class="notes" style="display: none">Notes:
+
+      Memory location $fe contains a new random byte on every instruction.
+      Memory location $ff contains the ascii code of the last key pressed.
+
+      Memory locations $200 to $5ff map to the screen pixels. Different values will
+      draw different colour pixels. The colours are:
+
+      $0: Black
+      $1: White
+      $2: Red
+      $3: Cyan
+      $4: Purple
+      $5: Green
+      $6: Blue
+      $7: Yellow
+      $8: Orange
+      $9: Brown
+      $a: Light red
+      $b: Dark grey
+      $c: Grey
+      $d: Light green
+      $e: Light blue
+      $f: Light grey
+    </div>
+  </div>
+  <script src="es5-shim.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script src="assembler.js"></script>
+  <script src="editor.js"></script>
+</body>
+
 </html>

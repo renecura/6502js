@@ -52,6 +52,21 @@ function SimulatorWidget(node) {
     $node.find('.notesButton').click(ui.showNotes);
     $node.find('.code').keypress(simulator.stop);
     $node.find('.code').keypress(ui.initialize);
+
+    $node.find('.memoryfile').change(function() {
+              
+            var fr = new FileReader();
+            fr.onload = function(){
+              let addr = parseInt($node.find('.start').val(), 16);
+              for(let d of fr.result.match(/\b(\w+)\b/g)){
+                memory.storeByte(addr, parseInt(d,16));
+                addr++;                
+              } 
+              simulator.reset();              
+            }              
+            fr.readAsText(this.files[0]);
+        })
+    
     $(document).keypress(memory.storeKeypress);
   }
 
@@ -74,7 +89,7 @@ function SimulatorWidget(node) {
       debug: [false, false]
     };
     var assembled = {
-      assemble: false,
+      assemble: true,
       run: [true, 'Run'],
       reset: true,
       hexdump: true,
@@ -239,13 +254,14 @@ function SimulatorWidget(node) {
       memory.storeByte(0xff, value);
     }
 
-    function format(start, length) {
-      var html = '';
+    function format(start, end) {
+      var html = '      00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f';
       var n;
+      var length = (end - start) + 1
 
       for (var x = 0; x < length; x++) {
         if ((x & 15) === 0) {
-          if (x > 0) { html += "\n"; }
+          html += "\n";
           n = (start + x);
           html += num2hex(((n >> 8) & 0xff));
           html += num2hex((n & 0xff));
@@ -1569,7 +1585,7 @@ function SimulatorWidget(node) {
       updateDebugInfo();
     }
 
-    function updateDebugInfo() {
+    function updateDebugInfoOriginal() {
       var html = "A=$" + num2hex(regA) + " X=$" + num2hex(regX) + " Y=$" + num2hex(regY) + "<br />";
       html += "SP=$" + num2hex(regSP) + " PC=$" + addr2hex(regPC);
       html += "<br />";
@@ -1577,6 +1593,24 @@ function SimulatorWidget(node) {
       for (var i = 7; i >=0; i--) {
         html += regP >> i & 1;
       }
+      $node.find('.minidebugger').html(html);
+      updateMonitor();
+    }
+
+    function updateDebugInfo() {
+      var html = "<table width='100%'>";
+      html += "<tr><td>A</td><td>X</td><td>Y</td><td>NV-BDIZC</td><td>PC</td><td>SP</td></tr></tr>";
+      
+      html += "<td>$" + num2hex(regA) + "</td>";
+      html += "<td>$" + num2hex(regX) + "</td>";
+      html += "<td>$" + num2hex(regY) + "</td>";
+      html += "<td>" + hex2bin(regP) + "</td>";
+      html += "<td>$" + addr2hex(regPC) + "</td>";
+      html += "<td>$" + num2hex(regSP) + "</td>";
+
+      html += "</tr></table>"
+
+      
       $node.find('.minidebugger').html(html);
       updateMonitor();
     }
@@ -2482,6 +2516,14 @@ function SimulatorWidget(node) {
     var hi = ((nr & 0xf0) >> 4);
     var lo = (nr & 15);
     return str.substring(hi, hi + 1) + str.substring(lo, lo + 1);
+  }
+
+  function hex2bin(hn){
+    let bin = "";
+    for (var i = 7; i >=0; i--) {
+      bin += hn >> i & 1;
+    }
+    return bin;
   }
 
   // message() - Prints text in the message window
