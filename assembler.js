@@ -33,6 +33,7 @@ function SimulatorWidget(node) {
     $node.find('.resetButton').click(simulator.reset);
     $node.find('.hexdumpButton').click(assembler.hexdump);
     $node.find('.disassembleButton').click(assembler.disassemble);
+    $node.find('.start').change(simulator.updateMonitor);
     $node.find('.debug').change(function () {
       var debug = $(this).is(':checked');
       if (debug) {
@@ -211,6 +212,13 @@ function SimulatorWidget(node) {
     }
 
     function updatePixel(addr) {
+      // let colorIndex = memory.get(addr) & 0x0f;
+      // let colorAddr = 0x0300 + (colorIndex * 3);
+      // console.log("colorAddr:", addr2hex(colorAddr), addr2hex(addr));
+
+      //ctx.fillStyle = "#" + memory.get(colorAddr) + memory.get(colorAddr+1) + memory.get(colorAddr+2)
+      //console.log("Fill Style:", ctx.fillStyle);
+
       ctx.fillStyle = palette[memory.get(addr) & 0x0f];
       var y = Math.floor((addr - 0x200) / 32);
       var x = (addr - 0x200) % 32;
@@ -1569,8 +1577,8 @@ function SimulatorWidget(node) {
 
     function updateMonitor() {
       if (monitoring) {
-        var start = parseInt($node.find('.start').val(), 16);
-        var length = parseInt($node.find('.length').val(), 16);
+        var start = parseInt($node.find('.start').val()+'00', 16);
+        var length = parseInt($node.find('.start').val()+'FF', 16);
         if (start >= 0 && length > 0) {
           $node.find('.monitor code').html(memory.format(start, length));
         }
@@ -1680,7 +1688,8 @@ function SimulatorWidget(node) {
       gotoAddr: gotoAddr,
       reset: reset,
       stop: stop,
-      toggleMonitor: toggleMonitor
+      toggleMonitor: toggleMonitor,
+      updateMonitor: updateMonitor
     };
   }
 
@@ -1864,6 +1873,9 @@ function SimulatorWidget(node) {
 
       var code = $node.find('.code').val();
       code += "\n\n";
+
+      document.cookie = encodeURI(code);
+
       var lines = code.split("\n");
       codeAssembledOK = true;
 

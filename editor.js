@@ -9,6 +9,8 @@ const textarea = document.querySelector('.code-editor')
 //         .join('')
 // })
 
+textarea.textContent = decodeURI(document.cookie);
+
 textarea.addEventListener('keydown', event => {
     if (event.key === 'Tab') {
         const start = textarea.selectionStart
