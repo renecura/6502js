@@ -54,20 +54,22 @@ function SimulatorWidget(node) {
     $node.find('.code').keypress(simulator.stop);
     $node.find('.code').keypress(ui.initialize);
 
-    $node.find('.memoryfile').change(function() {
-              
-            var fr = new FileReader();
-            fr.onload = function(){
-              let addr = parseInt($node.find('.start').val(), 16);
-              for(let d of fr.result.match(/\b(\w+)\b/g)){
-                memory.storeByte(addr, parseInt(d,16));
-                addr++;                
-              } 
-              simulator.reset();              
-            }              
-            fr.readAsText(this.files[0]);
-        })
-    
+    $node.find('.memoryfile').change(function () {
+
+      var fr = new FileReader();
+      fr.onload = function () {
+        let addr = parseInt($node.find('.start').val(), 16);
+        addr *= 256;
+        console.log(addr);
+        for (let d of fr.result.match(/\b(\w+)\b/g)) {
+          memory.storeByte(addr, parseInt(d, 16));
+          addr++;
+        }
+        simulator.reset();
+      }
+      fr.readAsText(this.files[0]);
+    })
+
     $(document).keypress(memory.storeKeypress);
   }
 
@@ -166,6 +168,10 @@ function SimulatorWidget(node) {
     }
 
     function showNotes() {
+      $node.find('.messages code').html($node.find('.notes').html());
+    }
+
+    function showInstruction(inst){
       $node.find('.messages code').html($node.find('.notes').html());
     }
 
@@ -1509,7 +1515,7 @@ function SimulatorWidget(node) {
 
     // popByte() - Pops a byte
     function popByte() {
-      return(memory.get(regPC++) & 0xff);
+      return (memory.get(regPC++) & 0xff);
     }
 
     // popWord() - Pops a word using popByte() twice
@@ -1550,6 +1556,7 @@ function SimulatorWidget(node) {
       var instruction = instructions['i' + instructionName];
 
       if (instruction) {
+        //console.log("@>>>" + assembler.disassembleInst(regPC));
         instruction();
       } else {
         instructions.ierr();
@@ -1562,6 +1569,7 @@ function SimulatorWidget(node) {
       if (!codeRunning && !debugging) { return; }
 
       setRandomByte();
+      console.log("@>>> " + assembler.disassembleInst(regPC).toDisassemble());
       executeNextInstruction();
 
       if ((regPC === 0) || (!codeRunning && !debugging)) {
@@ -1577,8 +1585,8 @@ function SimulatorWidget(node) {
 
     function updateMonitor() {
       if (monitoring) {
-        var start = parseInt($node.find('.start').val()+'00', 16);
-        var length = parseInt($node.find('.start').val()+'FF', 16);
+        var start = parseInt($node.find('.start').val() + '00', 16);
+        var length = parseInt($node.find('.start').val() + 'FF', 16);
         if (start >= 0 && length > 0) {
           $node.find('.monitor code').html(memory.format(start, length));
         }
@@ -1588,7 +1596,7 @@ function SimulatorWidget(node) {
     // debugExec() - Execute one instruction and print values
     function debugExec() {
       //if (codeRunning) {
-        execute(true);
+      execute(true);
       //}
       updateDebugInfo();
     }
@@ -1598,7 +1606,7 @@ function SimulatorWidget(node) {
       html += "SP=$" + num2hex(regSP) + " PC=$" + addr2hex(regPC);
       html += "<br />";
       html += "NV-BDIZC<br />";
-      for (var i = 7; i >=0; i--) {
+      for (var i = 7; i >= 0; i--) {
         html += regP >> i & 1;
       }
       $node.find('.minidebugger').html(html);
@@ -1608,7 +1616,7 @@ function SimulatorWidget(node) {
     function updateDebugInfo() {
       var html = "<table width='100%'>";
       html += "<tr><td>A</td><td>X</td><td>Y</td><td>NV-BDIZC</td><td>PC</td><td>SP</td></tr></tr>";
-      
+
       html += "<td>$" + num2hex(regA) + "</td>";
       html += "<td>$" + num2hex(regX) + "</td>";
       html += "<td>$" + num2hex(regY) + "</td>";
@@ -1618,7 +1626,7 @@ function SimulatorWidget(node) {
 
       html += "</tr></table>"
 
-      
+
       $node.find('.minidebugger').html(html);
       updateMonitor();
     }
@@ -1898,6 +1906,7 @@ function SimulatorWidget(node) {
           codeAssembledOK = false;
           break;
         }
+        console.log(`${i}: ${lines[i]}`);
       }
 
       if (codeLen === 0) {
@@ -2082,15 +2091,15 @@ function SimulatorWidget(node) {
         pushByte(opcode);
         if (labels.find(label)) {
           addr = labels.getPC(label);
-          switch(hilo) {
-          case ">":
-            pushByte((addr >> 8) & 0xff);
-            return true;
-          case "<":
-            pushByte(addr & 0xff);
-            return true;
-          default:
-            return false;
+          switch (hilo) {
+            case ">":
+              pushByte((addr >> 8) & 0xff);
+              return true;
+            case "<":
+              pushByte(addr & 0xff);
+              return true;
+            default:
+              return false;
           }
         } else {
           pushByte(0x00);
@@ -2293,7 +2302,7 @@ function SimulatorWidget(node) {
         value = parseInt(param, 10);
         if (value < 0 || value > 0xffff) { return false; }
         pushWord(value);
-        return(true);
+        return (true);
       }
       // it could be a label too..
       if (param.match(/^\w+$/)) {
@@ -2463,6 +2472,9 @@ function SimulatorWidget(node) {
         addArg: function (arg) {
           args.push(arg);
         },
+        toDisassemble: function () {
+          return opCode + ' ' + formatArguments(args)
+        },
         toString: function () {
           var bytesString = bytes.map(num2hex).join(' ');
           var padding = Array(11 - bytesString.length).join(' ');
@@ -2470,6 +2482,31 @@ function SimulatorWidget(node) {
             ' ' + formatArguments(args);
         }
       };
+    }
+
+    function disassembleInst(currentAddress) {
+      var length;
+      var inst;
+      var byte;
+      var modeAndCode;
+
+      inst = createInstruction(currentAddress);
+      byte = memory.get(currentAddress);
+      inst.addByte(byte);
+
+      modeAndCode = getModeAndCode(byte);
+      length = instructionLength[modeAndCode.mode];
+      inst.setModeAndCode(modeAndCode);
+
+      for (var i = 1; i < length; i++) {
+        currentAddress++;
+        byte = memory.get(currentAddress);
+        inst.addByte(byte);
+        inst.addArg(byte);
+      }
+      currentAddress++;
+
+      return inst;
     }
 
     function disassemble() {
@@ -2497,12 +2534,13 @@ function SimulatorWidget(node) {
           inst.addByte(byte);
           inst.addArg(byte);
         }
+
         instructions.push(inst);
         currentAddress++;
       }
 
       var html = 'Address  Hexdump   Dissassembly\n';
-      html +=    '-------------------------------\n';
+      html += '-------------------------------\n';
       html += instructions.join('\n');
       openPopup(html, 'Disassembly');
     }
@@ -2514,6 +2552,7 @@ function SimulatorWidget(node) {
         return defaultCodePC;
       },
       hexdump: hexdump,
+      disassembleInst: disassembleInst,
       disassemble: disassemble
     };
   }
@@ -2530,9 +2569,9 @@ function SimulatorWidget(node) {
     return str.substring(hi, hi + 1) + str.substring(lo, lo + 1);
   }
 
-  function hex2bin(hn){
+  function hex2bin(hn) {
     let bin = "";
-    for (var i = 7; i >=0; i--) {
+    for (var i = 7; i >= 0; i--) {
       bin += hn >> i & 1;
     }
     return bin;
