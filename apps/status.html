@@ -1,0 +1,83 @@
+// ════════════════════════════════════════════════════════
+//  BANCO DE EJERCICIOS
+//  Cada ejercicio tiene:
+//    id          → identificador mostrado en el dropdown
+//    registros   → { A, X, Y, SR }  (SR en binario como array de 8 bits)
+//    memoria     → [ { addr, val }, ... ]  (máx 16 entradas)
+//    instrucciones → array de filas; cada fila es:
+//                    - instrucción: { addr, mne, op, com, n, v, z, c }
+//                    - separador:   { sep: true, label }
+// ════════════════════════════════════════════════════════
+const EJERCICIOS = [
+  {
+    id: "Ejercicio 1 — Bucle con índice X",
+    registros: { A: "$00", X: "$03", Y: "$00", SR: [0,0,0,0,0,0,0,0] },
+    memoria: [
+      { addr:"$0010", val:"$FF" },
+      { addr:"$0011", val:"$01" },
+      { addr:"$0012", val:"$00" },
+      { addr:"$0013", val:"$7F" },
+      { addr:"$0020", val:"$80" },
+      { addr:"$0021", val:"$40" },
+      { addr:"$0022", val:"$10" },
+      { addr:"$0023", val:"$00" },
+    ],
+    instrucciones: [
+      { addr:"$0300", mne:"LDA", op:" #$00",    com:"; A ← $00",             n:'0', v:'-', z:'1', c:'-' },
+      { addr:"$0302", mne:"LDX", op:" #$03",    com:"; X ← $03",             n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$0304", mne:"CLC", op:"",         com:"; Carry ← 0",           n:'-', v:'-', z:'-', c:'0' },
+      { addr:"$0305", mne:"LDA", op:" $0010,X", com:"; A ← mem[$0013]=$7F",  n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$0308", mne:"ADC", op:" #$01",    com:"; A ← $7F+$01=$80",     n:'1', v:'1', z:'0', c:'0' },
+      { addr:"$030A", mne:"STA", op:" $0020",   com:"; mem[$0020] ← $80",    n:'-', v:'-', z:'-', c:'-' },
+      { addr:"$030D", mne:"DEX", op:"",         com:"; X ← $02",             n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$030E", mne:"BNE", op:" $0305",   com:"; Z=0 → salta",         n:'-', v:'-', z:'-', c:'-' },
+      { sep:true, label:"— Segunda iteración (X=$02) —" },
+      { addr:"$0305", mne:"LDA", op:" $0010,X", com:"; A ← mem[$0012]=$00",  n:'0', v:'-', z:'1', c:'-' },
+      { addr:"$0308", mne:"ADC", op:" #$01",    com:"; A ← $00+$01=$01",     n:'0', v:'0', z:'0', c:'0' },
+      { addr:"$030A", mne:"STA", op:" $0020",   com:"; mem[$0020] ← $01",    n:'-', v:'-', z:'-', c:'-' },
+      { addr:"$030D", mne:"DEX", op:"",         com:"; X ← $01",             n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$030E", mne:"BNE", op:" $0305",   com:"; Z=0 → salta",         n:'-', v:'-', z:'-', c:'-' },
+      { sep:true, label:"— Tercera iteración (X=$01) —" },
+      { addr:"$0305", mne:"LDA", op:" $0010,X", com:"; A ← mem[$0011]=$01",  n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$0308", mne:"ADC", op:" #$01",    com:"; A ← $01+$01=$02",     n:'0', v:'0', z:'0', c:'0' },
+      { addr:"$030A", mne:"STA", op:" $0020",   com:"; mem[$0020] ← $02",    n:'-', v:'-', z:'-', c:'-' },
+      { addr:"$030D", mne:"DEX", op:"",         com:"; X ← $00",             n:'0', v:'-', z:'1', c:'-' },
+      { addr:"$030E", mne:"BNE", op:" $0305",   com:"; Z=1 → no salta",      n:'-', v:'-', z:'-', c:'-' },
+      { addr:"$0310", mne:"RTS", op:"",         com:"; retorno de subrutina", n:'-', v:'-', z:'-', c:'-' },
+    ]
+  },
+  {
+    id: "Ejercicio 2 — Suma acumulada",
+    registros: { A: "$00", X: "$00", Y: "$00", SR: [0,0,0,0,0,0,1,0] },
+    memoria: [
+      { addr:"$0050", val:"$0A" },
+      { addr:"$0051", val:"$14" },
+      { addr:"$0052", val:"$1E" },
+      { addr:"$0060", val:"$00" },
+    ],
+    instrucciones: [
+      { addr:"$0200", mne:"CLC", op:"",         com:"; Carry ← 0",           n:'-', v:'-', z:'-', c:'0' },
+      { addr:"$0201", mne:"LDA", op:" $0050",   com:"; A ← $0A",             n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$0204", mne:"ADC", op:" $0051",   com:"; A ← $0A+$14=$1E",     n:'0', v:'0', z:'0', c:'0' },
+      { addr:"$0207", mne:"ADC", op:" $0052",   com:"; A ← $1E+$1E=$3C",     n:'0', v:'0', z:'0', c:'0' },
+      { addr:"$020A", mne:"STA", op:" $0060",   com:"; mem[$0060] ← $3C",    n:'-', v:'-', z:'-', c:'-' },
+      { addr:"$020D", mne:"RTS", op:"",         com:"; retorno",             n:'-', v:'-', z:'-', c:'-' },
+    ]
+  },
+  {
+    id: "Ejercicio 3 — Comparación y branch",
+    registros: { A: "$42", X: "$00", Y: "$00", SR: [0,0,0,0,0,0,0,0] },
+    memoria: [
+      { addr:"$0030", val:"$42" },
+      { addr:"$0031", val:"$FF" },
+    ],
+    instrucciones: [
+      { addr:"$0400", mne:"LDA", op:" $0030",   com:"; A ← mem[$0030]=$42",  n:'0', v:'-', z:'0', c:'-' },
+      { addr:"$0403", mne:"CMP", op:" #$42",    com:"; $42-$42 → flags",     n:'0', v:'0', z:'1', c:'1' },
+      { addr:"$0405", mne:"BEQ", op:" $040B",   com:"; Z=1 → salta a $040B", n:'-', v:'-', z:'-', c:'-' },
+      { sep:true, label:"— rama tomada (Z=1) —" },
+      { addr:"$040B", mne:"LDA", op:" $0031",   com:"; A ← mem[$0031]=$FF",  n:'1', v:'-', z:'0', c:'-' },
+      { addr:"$040E", mne:"RTS", op:"",         com:"; retorno",             n:'-', v:'-', z:'-', c:'-' },
+    ]
+  },
+];
